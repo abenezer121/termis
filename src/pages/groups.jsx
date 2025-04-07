@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi'
 import { TermisContext } from '../context'
 import Search from './search'
+import XtermTerminal from './terminal'
 
 const GroupPage = () => {
   const {
@@ -73,7 +74,14 @@ const GroupPage = () => {
               className="bg-white rounded-md shadow-sm p-4 flex items-center space-x-4"
               onClick={() => {
                 setCurrentDisplay({ page: 'terminal', identifier: host.id })
-                addNewTab(host.name, host.id, 'terminal')
+                addNewTab(host.name, host.id, 'terminal' .  host.username , host.privateKey , host.port , 
+                <XtermTerminal
+                host={host.host}
+                privateKey = {host.privateKey} 
+                username = {host.username} 
+                port = {host.port}
+                />
+                )
               }}
             >
               {host.icon}

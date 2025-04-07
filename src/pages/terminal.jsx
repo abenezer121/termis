@@ -1,158 +1,211 @@
-import { FitAddon } from '@xterm/addon-fit';
-import { WebLinksAddon } from '@xterm/addon-web-links';
-import { useEffect, useRef } from 'react';
-import { useXTerm } from 'react-xtermjs';
 
-const XtermTerminal = () => {
-  const { instance, ref } = useXTerm();
-  const fitAddon = new FitAddon();
-  const webLinksAddon = new WebLinksAddon();
-  const wsRef = useRef(null);
-  const currentLineRef = useRef('');
+import React, { useEffect, useRef, useState } from "react";
+import { Terminal } from "xterm";
+import { FitAddon } from "xterm-addon-fit";
+import "xterm/css/xterm.css";
+const { ipcRenderer } = window.require("electron");
 
+const XtermTerminal = (props) => {
+  const terminalRef = useRef(null);
+  const terminalInstance = useRef(null);
+  const fitAddonInstance = useRef(null);
 
-  const credentials = {
-    host: '9.141.19.175',
-    username: 'azureadmin',
-    privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_prod_1.pem',
-    port: 22
-  };
-
+  const [isConnected, setIsConnected] = useState(false);
+  const currentLineRef = useRef("")
+  let privateKey = props.privateKey
   useEffect(() => {
-    if (!instance) return;
+   
+    if (terminalRef.current && !terminalInstance.current) {
+      terminalInstance.current = new Terminal({
+        cursorBlink: true,
+        fontSize: 14,
+        theme: {
+          background: "#000",
+          foreground: "#fff",
+        },
+        convertEol: true,
+      });
 
-    instance.loadAddon(fitAddon);
-    instance.loadAddon(webLinksAddon);
-    fitAddon.fit();
+      fitAddonInstance.current = new FitAddon();
+      terminalInstance.current.loadAddon(fitAddonInstance.current);
+      terminalInstance.current.open(terminalRef.current);
 
-    wsRef.current = new WebSocket('ws://localhost:8080');
+      setTimeout(() => {
+        fitAddonInstance.current.fit();
+      }, 0);
 
-    wsRef.current.onmessage = (event) => {
-      instance.write(event.data);
-    };
-
-    wsRef.current.onopen = () => {
-      instance.writeln('Connecting to SSH server...');
-      wsRef.current.send(JSON.stringify({
-        type: 'connect',
-        ...credentials
-      }));
-    };
-
-    wsRef.current.onerror = (error) => {
-      instance.writeln(`\r\nWebSocket Error: ${error.message}\r\n`);
-    };
-
-    wsRef.current.onclose = () => {
-      instance.writeln('\r\nDisconnected from SSH server\r\n');
-    };
-
-    instance.onKey(({ key, domEvent }) => {
-      // Handle special key combinations
-      if (domEvent.ctrlKey) {
-        switch (key) {
-          case 'c':
-            // Ctrl+C - SIGINT (0x03)
-            wsRef.current.send(JSON.stringify({
-              type: 'command',
-              command: '\x03'
-            }));
-            instance.write('^C');
-            currentLineRef.current = '';
-            break;
-          
-          case 'z':
-            // Ctrl+Z - SIGTSTP (0x1A)
-            wsRef.current.send(JSON.stringify({
-              type: 'command',
-              command: '\x1A'
-            }));
-            instance.write('^Z');
-            currentLineRef.current = '';
-            break;
-          
-          case 'd':
-            // Ctrl+D - EOF (0x04)
-            wsRef.current.send(JSON.stringify({
-              type: 'command',
-              command: '\x04'
-            }));
-            instance.write('^D');
-            currentLineRef.current = '';
-            break;
-          
-          case 'l':
-            // Ctrl+L - Clear screen
-            instance.clear();
-            break;
-          
-          default:
-            // Send other Ctrl+key combinations as control characters
-            const charCode = key.charCodeAt(0);
-            if (charCode >= 97 && charCode <= 122) { // a-z
-              const controlChar = String.fromCharCode(charCode - 96);
-              wsRef.current.send(JSON.stringify({
-                type: 'command',
-                command: controlChar
-              }));
-            }
-        }
-      } else {
-        // Handle normal keys
-        switch (key) {
-          case '\r': // Enter
-            wsRef.current.send(JSON.stringify({
-              type: 'command',
-              command: currentLineRef.current + '\n'
-            }));
-            currentLineRef.current = '';
-            instance.write('\r\n');
-            break;
-          
-          case '\x7f': // Backspace
-            if (currentLineRef.current.length > 0) {
-              currentLineRef.current = currentLineRef.current.slice(0, -1);
-              instance.write('\b \b');
-            }
-            break;
-          
-          case '\x1b': // Escape
+   
+      terminalInstance.current.onKey(({ key, domEvent }) => {
+    
+        if (domEvent.ctrlKey) {
+         
+          switch (key) {
+            case 'c':
+              ipcRenderer.invoke("ssh-command", {
+                sshId: privateKey,
+                command: '\x03', // Ctrl+C
+              });
+              terminalInstance.current.write('^C\r\n');
+              currentLineRef.current = '';
+              break;
+            case 'z':
+              ipcRenderer.invoke("ssh-command", {
+                sshId: privateKey,
+                command: '\x1A', // Ctrl+Z
+              });
+              terminalInstance.current.write('^Z\r\n');
+              currentLineRef.current = '';
+              break;
+            case 'd':
+              ipcRenderer.invoke("ssh-command", {
+                sshId: privateKey,
+                command: '\x04', // Ctrl+D
+              });
+              terminalInstance.current.write('^D\r\n');
+              currentLineRef.current = '';
+              break;
+            case 'l':
+              terminalInstance.current.clear();
+              break;
+            default:
+             
+              const charCode = key.charCodeAt(0);
+              if (charCode >= 97 && charCode <= 122) {
+                const controlChar = String.fromCharCode(charCode - 96);
+                ipcRenderer.invoke("ssh-command", {
+                  sshId: privateKey,
+                  command: controlChar,
+                });
+              }
+          }
+        } else {
+         
+          switch (key) {
+            case '\r': // Enter key
+             
+              ipcRenderer.invoke("ssh-command", {
+                sshId: privateKey,
+                command: currentLineRef.current + '\n',
+              });
+              terminalInstance.current.write('\r\n');
+              currentLineRef.current = '';
+              break;
+            case '\x7f': // Backspace
+              if (currentLineRef.current.length > 0) {
+                currentLineRef.current = currentLineRef.current.slice(0, -1);
+                terminalInstance.current.write('\b \b');
+              }
+              break;
+            case '\x1b': // Escape
+             
+              break;
+            default:
            
-            break;
-          
-          default:
-            if (key.length === 1 && key.charCodeAt(0) >= 32) {
-              currentLineRef.current += key;
-              instance.write(key);
-            }
+              if (key.length === 1 && key.charCodeAt(0) >= 32) {
+                currentLineRef.current += key;
+                terminalInstance.current.write(key);
+              }
+          }
         }
-      }
-    });
+      });
 
-    const handleResize = () => {
-      fitAddon.fit();
-      // Send terminal resize information to server if needed
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        const { cols, rows } = instance;
-        wsRef.current.send(JSON.stringify({
-          type: 'resize',
-          cols,
-          rows
-        }));
+
+
+      // terminalInstance.current.onResize((size) => {
+      //   if (privateKey && isConnected) {
+      //     ipcRenderer.invoke("ssh-resize", {
+      //       sshId: privateKey,
+      //       cols: size.cols,
+      //       rows: size.rows,
+      //     });
+      //   }
+      // });
+    }
+
+ 
+    const handleSshData = (_event, { sshId, data }) => {
+      if (sshId === privateKey && terminalInstance.current) {
+        terminalInstance.current.write(data);
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    const handleSshError = (_event, { message }) => {
+      if (terminalInstance.current) {
+        terminalInstance.current.write(`\r\nError: ${message}\r\n`);
+        setIsConnected(false);
+      }
+    };
+
+    ipcRenderer.on("ssh-data", handleSshData);
+    ipcRenderer.on("ssh-error", handleSshError);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
+      ipcRenderer.removeListener("ssh-data", handleSshData);
+      ipcRenderer.removeListener("ssh-error", handleSshError);
     };
-  }, [instance]);
+  }, [privateKey, isConnected]);
 
-  return <div ref={ref} style={{ height: '100%', width: '100%' }} />;
+  const handleConnect = async () => {
+    try {
+      if (terminalInstance.current) {
+        const response = await ipcRenderer.invoke("ssh-connect", {
+          host: props.host,
+          port: 22,
+          username: props.username,
+          privateKey: privateKey,
+          cols: terminalInstance.current.cols,
+          rows: terminalInstance.current.rows,
+        });
+      
+        setIsConnected(true);
+        terminalInstance.current.focus(); 
+      }
+    } catch (error) {
+      console.error("Failed to connect to SSH:", error);
+      if (terminalInstance.current) {
+        terminalInstance.current.write(`\r\nFailed to connect to SSH: ${error.message}\r\n`);
+      }
+      setIsConnected(false);
+    }
+  };
+
+  
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     if (fitAddonInstance.current) {
+  //       fitAddonInstance.current.fit();
+  //       if (terminalInstance.current && privateKey && isConnected) {
+  //         ipcRenderer.invoke("ssh-resize", {
+  //           sshId: privateKey,
+  //           cols: terminalInstance.current.cols,
+  //           rows: terminalInstance.current.rows,
+  //         });
+  //       }
+  //     }
+  //   };
+
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, [privateKey, isConnected]);
+
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="p-4">
+        <button 
+          onClick={handleConnect}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none"
+        >
+          {isConnected ? "Connected" : "Connect to SSH"}
+        </button>
+      </div>
+      <div 
+        ref={terminalRef} 
+        className="flex-1 bg-black"
+        onClick={() => terminalInstance.current?.focus()}
+      />
+    </div>
+  );
 };
+
 
 export default XtermTerminal;

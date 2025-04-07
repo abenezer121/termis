@@ -1,16 +1,5 @@
 import { useState, useContext, useEffect } from 'react'
-import {
-  FiServer,
-  FiFolder,
-  FiSettings,
-  FiPlus,
-  FiTerminal,
-  FiChevronDown,
-  FiChevronRight,
-  FiGrid,
-  FiKey,
-  FiBookmark,
-} from 'react-icons/fi'
+import {FiServer,FiKey,} from 'react-icons/fi'
 import ServersTab from './pages/servers'
 import SFTPTab from './pages/sftp'
 import SCPTab from './pages/scp'
@@ -31,9 +20,9 @@ function App() {
         icon: <FaUbuntu size={20} className="text-orange-500" />,
         connectionDetails: 'ssh, azureadmin',
         parentId: 'f3gda',
-        host: '9.141.19.175',
+        host: '9.141.20.46',
         username: 'azureadmin',
-        privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_prod_1.pem',
+        privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_test_1.pem',
         port: 22
       },
       {
@@ -154,6 +143,7 @@ const MainSideSection = () => {
   )
 }
 
+
 const MainContentSection = () => {
   const { currentDisplay, setCurrentDisplay } = useContext(TermisContext)
 
@@ -164,23 +154,36 @@ const MainContentSection = () => {
       case 'sftp':
         return <SFTPTab />
       case 'scp':
-        return <SCPTab />
+
+     
+        return <SCPTab  />
       case 'identities':
         return <IdentitiesTab />
       case 'group':
         return <GroupPage />
       case 'terminal':
-        return <XtermTerminal />
-      default:
-        return <div>Select a tab</div>
+        return <TerminalManager />
+      
     }
   }
 
   return <div className="flex-1 p-4">{renderTabContent()}</div>
 }
 
+
+const TerminalManager = ()=> {
+  const {activeTabId , tabs} = useContext(TermisContext)
+  console.log(activeTabId)
+  let currentTab = tabs.filter((n) => n.id == activeTabId)
+  if (currentTab.length > 0){
+    return currentTab[0].content
+  }else{
+    return (<div></div>)
+  }
+}
+
 export const ChromeTabs = () => {
-  const { tabs, setTabs, setActiveTab, activeTabId, closeTab, addNewTab } =
+  const { tabs, setActiveTab, activeTabId, closeTab } =
     useContext(TermisContext)
 
   return (
@@ -209,16 +212,10 @@ export const ChromeTabs = () => {
             ))}
           </div>
 
-          {/* <div
-            onClick={addNewTab}
-            className="flex items-center justify-center bg-gray-300 px-3 py-2 rounded-t-lg ml-1 cursor-pointer hover:bg-gray-400"
-          >
-            +
-          </div> */}
+        
         </div>
       </div>
     </div>
   )
 }
-
 export default App

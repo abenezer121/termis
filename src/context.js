@@ -6,6 +6,7 @@ export const TermisContext = createContext({
   activeTabs: [],
   hosts: [],
   groups: [],
+  
   currentDisplay: { page: 'servers', identifier: 'servers' },
   terminalFontFamily: '"Fira Mono", monospace',
   terminalFontSize: 14,
@@ -32,6 +33,7 @@ export const TermisContext = createContext({
   closeTab: (id, e) => {},
   addNewTab: (name, identifier, page) => {},
   setSearchQuery: () => {},
+
 })
 
 export const TermisProvider = ({ children }) => {
@@ -56,6 +58,8 @@ export const TermisProvider = ({ children }) => {
   const [tabs, setTabs] = useState([])
   const [activeTabId, setActiveTabId] = useState('0')
   const [searchQuery, setSearchQuery] = useState('')
+
+
 
   const closeTab = (id, e) => {
     e.stopPropagation()
@@ -84,7 +88,8 @@ export const TermisProvider = ({ children }) => {
     }
   }
 
-  const addNewTab = (name, identifier, page) => {
+  const addNewTab = (name, identifier, page, host , username , privateKey , port , content) => {
+   
     const newTabId = Date.now().toString()
     setTabs([
       ...tabs,
@@ -93,9 +98,11 @@ export const TermisProvider = ({ children }) => {
         title: name,
         identifier: identifier,
         page: page,
-        content: (
-          <div className="p-4">Content for New Tab {tabs.length + 1}</div>
-        ),
+        content : content,
+        username : username ,
+        privateKey : privateKey , 
+        port : port,
+        host : host
       },
     ])
     setActiveTabId(newTabId)
@@ -154,6 +161,8 @@ export const TermisProvider = ({ children }) => {
         setActiveTab,
         searchQuery,
         setSearchQuery,
+    
+       
       }}
     >
       {children}

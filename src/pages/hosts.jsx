@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react'
 import { TermisContext } from '../context'
+import XtermTerminal from './terminal'
 
 const Hosts = () => {
   const {
@@ -23,7 +24,15 @@ const Hosts = () => {
         {filteredHosts.map((host) => (
           <div
             onClick={() => {
-              addNewTab(host.name, host.id, 'terminal')
+
+              addNewTab(host.name, host.id, 'terminal' , host.host , host.username , host.privateKey , host.port , 
+              
+              <XtermTerminal 
+                host={host.host}
+                privateKey = {host.privateKey} 
+                username = {host.username} 
+                port = {host.port}
+              />)
               setCurrentDisplay({ page: 'terminal', identifier: host.id })
             }}
             key={host.id}
