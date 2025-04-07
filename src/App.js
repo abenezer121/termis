@@ -145,43 +145,56 @@ const MainSideSection = () => {
 
 
 const MainContentSection = () => {
-  const { currentDisplay, setCurrentDisplay } = useContext(TermisContext)
+  const { currentDisplay } = useContext(TermisContext);
 
-  const renderTabContent = () => {
-    switch (currentDisplay.page) {
-      case 'servers':
-        return <ServersTab />
-      case 'sftp':
-        return <SFTPTab />
-      case 'scp':
+  return (
+    <div className="flex-1 p-4">
+      <div style={{ display: currentDisplay.page === "servers" ? "block" : "none" }}>
+        <ServersTab />
+      </div>
 
-     
-        return <SCPTab  />
-      case 'identities':
-        return <IdentitiesTab />
-      case 'group':
-        return <GroupPage />
-      case 'terminal':
-        return <TerminalManager />
-      
-    }
-  }
+      <div style={{ display: currentDisplay.page === "sftp" ? "block" : "none" }}>
+        <SFTPTab />
+      </div>
 
-  return <div className="flex-1 p-4">{renderTabContent()}</div>
-}
+      <div style={{ display: currentDisplay.page === "scp" ? "block" : "none" }}>
+        <SCPTab />
+      </div>
 
+   
+      <div style={{ display: currentDisplay.page === "identities" ? "block" : "none" }}>
+        <IdentitiesTab />
+      </div>
 
-const TerminalManager = ()=> {
-  const {activeTabId , tabs} = useContext(TermisContext)
-  console.log(activeTabId)
-  let currentTab = tabs.filter((n) => n.id == activeTabId)
-  if (currentTab.length > 0){
-    return currentTab[0].content
-  }else{
-    return (<div></div>)
-  }
-}
+    
+      <div style={{ display: currentDisplay.page === "group" ? "block" : "none" }}>
+        <GroupPage />
+      </div>
 
+    
+      <div style={{ display: currentDisplay.page === "terminal" ? "block" : "none" }}>
+        <TerminalManager />
+      </div>
+    </div>
+  );
+};
+
+const TerminalManager = () => {
+  const { activeTabId, tabs } = useContext(TermisContext);
+
+  return (
+    <div className="flex-1">
+      {tabs.map((tab) => (
+        <div
+          key={tab.id}
+          style={{ display: tab.id === activeTabId ? "block" : "none" }}
+        >
+          {tab.content}
+        </div>
+      ))}
+    </div>
+  );
+};
 export const ChromeTabs = () => {
   const { tabs, setActiveTab, activeTabId, closeTab } =
     useContext(TermisContext)

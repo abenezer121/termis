@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
@@ -11,8 +10,9 @@ const XtermTerminal = (props) => {
   const fitAddonInstance = useRef(null);
 
   const [isConnected, setIsConnected] = useState(false);
-  const currentLineRef = useRef("")
-  let privateKey = props.privateKey
+  const currentLineRef = useRef("");
+  const privateKey = props.privateKey;
+
   useEffect(() => {
    
     if (terminalRef.current && !terminalInstance.current) {
@@ -36,39 +36,36 @@ const XtermTerminal = (props) => {
 
    
       terminalInstance.current.onKey(({ key, domEvent }) => {
-    
         if (domEvent.ctrlKey) {
-         
           switch (key) {
-            case 'c':
+            case "c":
               ipcRenderer.invoke("ssh-command", {
                 sshId: privateKey,
-                command: '\x03', // Ctrl+C
+                command: "\x03", // Ctrl+C
               });
-              terminalInstance.current.write('^C\r\n');
-              currentLineRef.current = '';
+              terminalInstance.current.write("^C\r\n");
+              currentLineRef.current = "";
               break;
-            case 'z':
+            case "z":
               ipcRenderer.invoke("ssh-command", {
                 sshId: privateKey,
-                command: '\x1A', // Ctrl+Z
+                command: "\x1A", // Ctrl+Z
               });
-              terminalInstance.current.write('^Z\r\n');
-              currentLineRef.current = '';
+              terminalInstance.current.write("^Z\r\n");
+              currentLineRef.current = "";
               break;
-            case 'd':
+            case "d":
               ipcRenderer.invoke("ssh-command", {
                 sshId: privateKey,
-                command: '\x04', // Ctrl+D
+                command: "\x04", // Ctrl+D
               });
-              terminalInstance.current.write('^D\r\n');
-              currentLineRef.current = '';
+              terminalInstance.current.write("^D\r\n");
+              currentLineRef.current = "";
               break;
-            case 'l':
+            case "l":
               terminalInstance.current.clear();
               break;
             default:
-             
               const charCode = key.charCodeAt(0);
               if (charCode >= 97 && charCode <= 122) {
                 const controlChar = String.fromCharCode(charCode - 96);
@@ -79,28 +76,24 @@ const XtermTerminal = (props) => {
               }
           }
         } else {
-         
           switch (key) {
-            case '\r': // Enter key
-             
+            case "\r": // Enter key
               ipcRenderer.invoke("ssh-command", {
                 sshId: privateKey,
-                command: currentLineRef.current + '\n',
+                command: currentLineRef.current + "\n",
               });
-              terminalInstance.current.write('\r\n');
-              currentLineRef.current = '';
+              terminalInstance.current.write("\r\n");
+              currentLineRef.current = "";
               break;
-            case '\x7f': // Backspace
+            case "\x7f": // Backspace
               if (currentLineRef.current.length > 0) {
                 currentLineRef.current = currentLineRef.current.slice(0, -1);
-                terminalInstance.current.write('\b \b');
+                terminalInstance.current.write("\b \b");
               }
               break;
-            case '\x1b': // Escape
-             
+            case "\x1b": // Escape
               break;
             default:
-           
               if (key.length === 1 && key.charCodeAt(0) >= 32) {
                 currentLineRef.current += key;
                 terminalInstance.current.write(key);
@@ -108,21 +101,9 @@ const XtermTerminal = (props) => {
           }
         }
       });
-
-
-
-      // terminalInstance.current.onResize((size) => {
-      //   if (privateKey && isConnected) {
-      //     ipcRenderer.invoke("ssh-resize", {
-      //       sshId: privateKey,
-      //       cols: size.cols,
-      //       rows: size.rows,
-      //     });
-      //   }
-      // });
     }
 
- 
+   
     const handleSshData = (_event, { sshId, data }) => {
       if (sshId === privateKey && terminalInstance.current) {
         terminalInstance.current.write(data);
@@ -140,10 +121,38 @@ const XtermTerminal = (props) => {
     ipcRenderer.on("ssh-error", handleSshError);
 
     return () => {
+   
       ipcRenderer.removeListener("ssh-data", handleSshData);
       ipcRenderer.removeListener("ssh-error", handleSshError);
+
+      if (terminalInstance.current) {
+        terminalInstance.current.dispose();
+        terminalInstance.current = null;
+      }
     };
-  }, [privateKey, isConnected]);
+  }, [privateKey]); 
+  useEffect(() => {
+  
+    const resizeTerminal = () => {
+      if (fitAddonInstance.current && terminalInstance.current) {
+        fitAddonInstance.current.fit();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        resizeTerminal();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("resize", resizeTerminal);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("resize", resizeTerminal);
+    };
+  }, []);
 
   const handleConnect = async () => {
     try {
@@ -156,56 +165,38 @@ const XtermTerminal = (props) => {
           cols: terminalInstance.current.cols,
           rows: terminalInstance.current.rows,
         });
-      
+
         setIsConnected(true);
-        terminalInstance.current.focus(); 
+        terminalInstance.current.focus();
       }
     } catch (error) {
       console.error("Failed to connect to SSH:", error);
       if (terminalInstance.current) {
-        terminalInstance.current.write(`\r\nFailed to connect to SSH: ${error.message}\r\n`);
+        terminalInstance.current.write(
+          `\r\nFailed to connect to SSH: ${error.message}\r\n`
+        );
       }
       setIsConnected(false);
     }
   };
 
-  
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     if (fitAddonInstance.current) {
-  //       fitAddonInstance.current.fit();
-  //       if (terminalInstance.current && privateKey && isConnected) {
-  //         ipcRenderer.invoke("ssh-resize", {
-  //           sshId: privateKey,
-  //           cols: terminalInstance.current.cols,
-  //           rows: terminalInstance.current.rows,
-  //         });
-  //       }
-  //     }
-  //   };
-
-  //   window.addEventListener("resize", handleResize);
-  //   return () => window.removeEventListener("resize", handleResize);
-  // }, [privateKey, isConnected]);
-
   return (
     <div className="flex flex-col h-screen">
       <div className="p-4">
-        <button 
+        <button
           onClick={handleConnect}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none"
         >
           {isConnected ? "Connected" : "Connect to SSH"}
         </button>
       </div>
-      <div 
-        ref={terminalRef} 
+      <div
+        ref={terminalRef}
         className="flex-1 bg-black"
         onClick={() => terminalInstance.current?.focus()}
       />
     </div>
   );
 };
-
 
 export default XtermTerminal;
