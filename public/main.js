@@ -111,6 +111,109 @@ ipcMain.handle('ssh-resize', (event, { sshId, cols, rows }) => {
     sshConnection.sshStream.setWindow(rows, cols);
   }
 });
+
+
+ipcMain.handle('get-system-data' , (event)=>{
+  return {
+    hosts : [{
+      id: 1,
+      name: 'gtest1',
+     
+      connectionDetails: 'ssh, azureadmin',
+      parentId: 'f3gda',
+      host: '9.141.20.46',
+      username: 'azureadmin',
+      privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_test_1.pem',
+      port: 22
+    },
+    {
+      id: 2,
+      name: 'prod1',
+      connectionDetails: 'ssh, azureadmin',
+      parentId: 'f3gda',
+      host: '9.141.19.175',
+      username: 'azureadmin',
+      privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_prod_1.pem',
+      port: 22
+    },
+    {
+      id: 3,
+      name: 'postoffice',
+      connectionDetails: 'ssh, azureadmin',
+      parentId: 'f3gde',
+      host: '9.141.19.175',
+      username: 'azureadmin',
+      privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_prod_1.pem',
+      port: 22
+    }], 
+    groups : [
+     
+        {
+          id: 'f3gda',
+          name: 'Gebeta',
+          hostsCount: 2,
+        },
+        {
+          id: 'f3gde',
+          name: 'Postoffice',
+          hostsCount: 1,
+        },
+      ]}
+   
+})
+
+
+// Function to recursively read directory contents
+function readDirectory(dirPath) {
+  try {
+    const files = fs.readdirSync(dirPath, { withFileTypes: true });
+
+    return files.map((file) => {
+      const fullPath = path.join(dirPath, file.name);
+
+      try {
+        const stats = fs.statSync(fullPath);
+
+        return {
+          name: file.name,
+          kind: file.isDirectory() ? 'folder' : path.extname(file.name).slice(1) || 'file',
+          dateModified: stats.mtime.toLocaleString(),
+          size: file.isDirectory() ? '-' : `${(stats.size / 1024).toFixed(2)} kB`,
+          path: fullPath,
+        };
+      } catch (error) {
+        console.warn(`Skipping inaccessible file/directory: ${fullPath}`);
+        return {
+          name: file.name,
+          kind: 'inaccessible',
+          dateModified: 'N/A',
+          size: 'N/A',
+          path: fullPath,
+        };
+      }
+    });
+  } catch (error) {
+    console.error('Error reading directory:', error);
+    return [];
+  }
+}
+
+// Handle IPC request to get file system data
+ipcMain.handle('get-file-system-data', async (event, dirPath) => {
+  try {
+    if (!fs.existsSync(dirPath)) {
+      throw new Error('Directory does not exist');
+    }
+
+    const files = readDirectory(dirPath);
+    return files;
+  } catch (error) {
+    console.error('Error fetching file system data:', error);
+    return [];
+  }
+});
+
+
 function cleanupSshClient(sshId) {
   const connection = sshClients.get(sshId);
   if (!connection) return;

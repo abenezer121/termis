@@ -7,9 +7,7 @@ import XtermTerminal from '../component/Terminal/terminal'
 const GroupPage = () => {
   const {
     searchQuery,
-    setSearchQuery,
     hosts,
-    groups,
     view,
     removeLastIndexFromView,
     setCurrentDisplay,
