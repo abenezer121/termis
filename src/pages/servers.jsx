@@ -1,11 +1,11 @@
-import React, { useContext, useState } from 'react'
-import {FiFolder} from 'react-icons/fi'
-import { TermisContext } from '../context/context'
-import Hosts from '../component/Host/hosts'
-import Search from '../component/Search/search'
+import React, { useContext, useState } from "react";
+import { FiFolder } from "react-icons/fi";
+import { TermisContext } from "../context/context";
+import Hosts from "../component/Host/hosts";
+import Search from "../component/Search/search";
 
 const ServersTab = () => {
-  const { groups, setCurrentDisplay, addToView,} = useContext(TermisContext)
+  const { groups, setCurrentDisplay, addToView } = useContext(TermisContext);
 
   return (
     <div>
@@ -20,11 +20,11 @@ const ServersTab = () => {
               className=""
               onClick={() => {
                 setCurrentDisplay({
-                  page: 'group',
+                  page: "group",
                   identifier: value.name,
                   parentId: value.id,
-                })
-                addToView(value.name)
+                });
+                addToView(value.name);
               }}
             >
               <div className="bg-white rounded-md shadow-sm p-4 flex items-center space-x-4">
@@ -37,13 +37,13 @@ const ServersTab = () => {
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
-   
+
       <Hosts />
     </div>
-  )
-}
+  );
+};
 
-export default ServersTab
+export default ServersTab;

@@ -14,7 +14,6 @@ const XtermTerminal = (props) => {
   const privateKey = props.privateKey;
 
   useEffect(() => {
-   
     if (terminalRef.current && !terminalInstance.current) {
       terminalInstance.current = new Terminal({
         cursorBlink: true,
@@ -34,7 +33,6 @@ const XtermTerminal = (props) => {
         fitAddonInstance.current.fit();
       }, 0);
 
-   
       terminalInstance.current.onKey(({ key, domEvent }) => {
         if (domEvent.ctrlKey) {
           switch (key) {
@@ -103,7 +101,6 @@ const XtermTerminal = (props) => {
       });
     }
 
-   
     const handleSshData = (_event, { sshId, data }) => {
       if (sshId === privateKey && terminalInstance.current) {
         terminalInstance.current.write(data);
@@ -121,7 +118,6 @@ const XtermTerminal = (props) => {
     ipcRenderer.on("ssh-error", handleSshError);
 
     return () => {
-   
       ipcRenderer.removeListener("ssh-data", handleSshData);
       ipcRenderer.removeListener("ssh-error", handleSshError);
 
@@ -130,9 +126,8 @@ const XtermTerminal = (props) => {
         terminalInstance.current = null;
       }
     };
-  }, [privateKey]); 
+  }, [privateKey]);
   useEffect(() => {
-  
     const resizeTerminal = () => {
       if (fitAddonInstance.current && terminalInstance.current) {
         fitAddonInstance.current.fit();
@@ -173,7 +168,7 @@ const XtermTerminal = (props) => {
       console.error("Failed to connect to SSH:", error);
       if (terminalInstance.current) {
         terminalInstance.current.write(
-          `\r\nFailed to connect to SSH: ${error.message}\r\n`
+          `\r\nFailed to connect to SSH: ${error.message}\r\n`,
         );
       }
       setIsConnected(false);

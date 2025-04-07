@@ -1,8 +1,8 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState } from "react";
 
-import { TermisContext } from '../context/context'
-import Search from '../component/Search/search'
-import XtermTerminal from '../component/Terminal/terminal'
+import { TermisContext } from "../context/context";
+import Search from "../component/Search/search";
+import XtermTerminal from "../component/Terminal/terminal";
 
 const GroupPage = () => {
   const {
@@ -13,26 +13,26 @@ const GroupPage = () => {
     setCurrentDisplay,
     currentDisplay,
     addNewTab,
-  } = useContext(TermisContext)
+  } = useContext(TermisContext);
 
   const filteredHosts = hosts.filter(
     (host) =>
       host.parentId &&
       host.parentId.includes(currentDisplay.parentId) &&
-      host.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+      host.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   // remove from the end to the index - 1
   // at this stage i only work it for length 2 array
   let removeFromViewsArray = (index) => {
     if (index != view.length - 1) {
-      removeLastIndexFromView()
+      removeLastIndexFromView();
       setCurrentDisplay({
         page: view[0],
         identifier: view[0],
-      })
+      });
     }
-  }
+  };
 
   return (
     <div>
@@ -40,12 +40,12 @@ const GroupPage = () => {
         <React.Fragment key={index}>
           <span
             onClick={() => removeFromViewsArray(index)}
-            style={{ cursor: 'pointer', margin: '0 5px' }}
+            style={{ cursor: "pointer", margin: "0 5px" }}
           >
             {item}
           </span>
           {index < view.length - 1 && (
-            <span style={{ margin: '0 5px' }}>→</span>
+            <span style={{ margin: "0 5px" }}>→</span>
           )}
         </React.Fragment>
       ))}
@@ -59,15 +59,20 @@ const GroupPage = () => {
               key={host.id}
               className="bg-white rounded-md shadow-sm p-4 flex items-center space-x-4"
               onClick={() => {
-                setCurrentDisplay({ page: 'terminal', identifier: host.id })
-                addNewTab(host.name, host.id, 'terminal' .  host.username , host.privateKey , host.port , 
-                <XtermTerminal
-                host={host.host}
-                privateKey = {host.privateKey} 
-                username = {host.username} 
-                port = {host.port}
-                />
-                )
+                setCurrentDisplay({ page: "terminal", identifier: host.id });
+                addNewTab(
+                  host.name,
+                  host.id,
+                  "terminal".host.username,
+                  host.privateKey,
+                  host.port,
+                  <XtermTerminal
+                    host={host.host}
+                    privateKey={host.privateKey}
+                    username={host.username}
+                    port={host.port}
+                  />,
+                );
               }}
             >
               {host.icon}
@@ -82,7 +87,7 @@ const GroupPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default GroupPage
+export default GroupPage;

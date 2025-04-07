@@ -1,23 +1,23 @@
-import { createContext } from 'react'
-import { useState } from 'react'
+import { createContext } from "react";
+import { useState } from "react";
 
 export const TermisContext = createContext({
-  view: ['servers'],
+  view: ["servers"],
   activeTabs: [],
   hosts: [],
   groups: [],
-  
-  currentDisplay: { page: 'servers', identifier: 'servers' },
+
+  currentDisplay: { page: "servers", identifier: "servers" },
   terminalFontFamily: '"Fira Mono", monospace',
   terminalFontSize: 14,
   tabs: [],
   terminalTheme: {
-    background: '#1e1e1e',
-    foreground: '#f8f8f8',
-    cursor: '#f8f8f8',
+    background: "#1e1e1e",
+    foreground: "#f8f8f8",
+    cursor: "#f8f8f8",
   },
   activeTabId: 0,
-  searchQuery: '',
+  searchQuery: "",
 
   setActiveTabId: () => {},
   setCurrentDisplay: () => {},
@@ -33,64 +33,69 @@ export const TermisContext = createContext({
   closeTab: (id, e) => {},
   addNewTab: (name, identifier, page) => {},
   setSearchQuery: () => {},
-
-})
+});
 
 export const TermisProvider = ({ children }) => {
   const [terminalFontFamily, setTerminalFontFamily] = useState(
-    '"Fira Mono", monospace'
-  )
-  const [terminalFontSize, setTerminalFontSize] = useState(14)
+    '"Fira Mono", monospace',
+  );
+  const [terminalFontSize, setTerminalFontSize] = useState(14);
   const [terminalTheme, setTerminalTheme] = useState({
-    background: '#1e1e1e',
-    foreground: '#f8f8f8',
-    cursor: '#f8f8f8',
-  })
-  const [activeTabs, setActiveTabs] = useState([0])
+    background: "#1e1e1e",
+    foreground: "#f8f8f8",
+    cursor: "#f8f8f8",
+  });
+  const [activeTabs, setActiveTabs] = useState([0]);
   const [currentDisplay, setCurrentDisplay] = useState({
-    page: 'servers',
-    identifier: 'servers',
-    parentId: '',
-  })
-  const [view, setView] = useState(['servers'])
-  const [hosts, setHosts] = useState([])
-  const [groups, setGroups] = useState([])
-  const [tabs, setTabs] = useState([])
-  const [activeTabId, setActiveTabId] = useState('0')
-  const [searchQuery, setSearchQuery] = useState('')
-
-
+    page: "servers",
+    identifier: "servers",
+    parentId: "",
+  });
+  const [view, setView] = useState(["servers"]);
+  const [hosts, setHosts] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [tabs, setTabs] = useState([]);
+  const [activeTabId, setActiveTabId] = useState("0");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const closeTab = (id, e) => {
-    e.stopPropagation()
+    e.stopPropagation();
     if (tabs.length <= 1) {
-      setActiveTab(0)
-      setTabs([])
-      setCurrentDisplay({ page: 'servers' })
-      return
+      setActiveTab(0);
+      setTabs([]);
+      setCurrentDisplay({ page: "servers" });
+      return;
     }
 
-    const newTabs = tabs.filter((tab) => tab.id !== id)
-    setTabs(newTabs)
+    const newTabs = tabs.filter((tab) => tab.id !== id);
+    setTabs(newTabs);
 
     if (id === activeTabId) {
-      const remainingTab = newTabs[newTabs.length - 1]
-      setActiveTabId(remainingTab.id)
+      const remainingTab = newTabs[newTabs.length - 1];
+      setActiveTabId(remainingTab.id);
     }
-  }
+  };
 
   const setActiveTab = (id) => {
-    setActiveTabId(id)
+    setActiveTabId(id);
     for (let i = 0; i < tabs.length; i++) {
       if (tabs[i].id == id) {
-        setCurrentDisplay({ page: 'terminal', identifier: tabs[i].identifier })
+        setCurrentDisplay({ page: "terminal", identifier: tabs[i].identifier });
       }
     }
-  }
+  };
 
-  const addNewTab = (name, identifier, page, host , username , privateKey , port , content) => {
-   
-    const newTabId = Date.now().toString()
+  const addNewTab = (
+    name,
+    identifier,
+    page,
+    host,
+    username,
+    privateKey,
+    port,
+    content,
+  ) => {
+    const newTabId = Date.now().toString();
     setTabs([
       ...tabs,
       {
@@ -98,38 +103,38 @@ export const TermisProvider = ({ children }) => {
         title: name,
         identifier: identifier,
         page: page,
-        content : content,
-        username : username ,
-        privateKey : privateKey , 
-        port : port,
-        host : host
+        content: content,
+        username: username,
+        privateKey: privateKey,
+        port: port,
+        host: host,
       },
-    ])
-    setActiveTabId(newTabId)
-  }
+    ]);
+    setActiveTabId(newTabId);
+  };
 
   const addToView = (text) => {
-    if (view.length != 1) setView([view[0], text])
-    else setView((prevView) => [...prevView, text])
-  }
+    if (view.length != 1) setView([view[0], text]);
+    else setView((prevView) => [...prevView, text]);
+  };
 
   const removeFromView = (text) => {
     setView((prevView) =>
       prevView.reduce((acc, item) => {
         if (item !== text) {
-          acc.push(item)
+          acc.push(item);
         }
-        return acc
-      }, [])
-    )
-  }
+        return acc;
+      }, []),
+    );
+  };
 
   const removeLastIndexFromView = () => {
     if (view.length > 1) {
-      const newView = view.slice(0, -1)
-      setView(newView)
+      const newView = view.slice(0, -1);
+      setView(newView);
     }
-  }
+  };
 
   return (
     <TermisContext.Provider
@@ -161,11 +166,9 @@ export const TermisProvider = ({ children }) => {
         setActiveTab,
         searchQuery,
         setSearchQuery,
-    
-       
       }}
     >
       {children}
     </TermisContext.Provider>
-  )
-}
+  );
+};
