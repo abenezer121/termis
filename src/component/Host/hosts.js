@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react'
-import { TermisContext } from '../context'
-import XtermTerminal from './terminal'
+import { TermisContext } from '../../context/context'
+import XtermTerminal from '../Terminal/terminal'
 
 const Hosts = () => {
   const {

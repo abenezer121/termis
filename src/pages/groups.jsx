@@ -1,20 +1,8 @@
 import React, { useContext, useState } from 'react'
-import { FaUbuntu, FaWindows } from 'react-icons/fa'
-import {
-  FiServer,
-  FiFolder,
-  FiSettings,
-  FiPlus,
-  FiTerminal,
-  FiChevronDown,
-  FiChevronRight,
-  FiGrid,
-  FiKey,
-  FiBookmark,
-} from 'react-icons/fi'
-import { TermisContext } from '../context'
-import Search from './search'
-import XtermTerminal from './terminal'
+
+import { TermisContext } from '../context/context'
+import Search from '../component/Search/search'
+import XtermTerminal from '../component/Terminal/terminal'
 
 const GroupPage = () => {
   const {

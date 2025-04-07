@@ -1,31 +1,11 @@
 import React, { useContext, useState } from 'react'
-import { FaUbuntu, FaWindows } from 'react-icons/fa'
-import {
-  FiServer,
-  FiFolder,
-  FiSettings,
-  FiPlus,
-  FiTerminal,
-  FiChevronDown,
-  FiChevronRight,
-  FiGrid,
-  FiKey,
-  FiBookmark,
-} from 'react-icons/fi'
-import { TermisContext } from '../context'
-import Hosts from './hosts'
-import Search from './search'
+import {FiFolder} from 'react-icons/fi'
+import { TermisContext } from '../context/context'
+import Hosts from '../component/Host/hosts'
+import Search from '../component/Search/search'
 
 const ServersTab = () => {
-  const {
-    searchQuery,
-    setSearchQuery,
-    addNewTab,
-    hosts,
-    groups,
-    setCurrentDisplay,
-    addToView,
-  } = useContext(TermisContext)
+  const { groups, setCurrentDisplay, addToView,} = useContext(TermisContext)
 
   return (
     <div>
@@ -60,7 +40,7 @@ const ServersTab = () => {
           )
         })}
       </div>
-      {/* Hosts */}
+   
       <Hosts />
     </div>
   )
