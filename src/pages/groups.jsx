@@ -1,98 +1,46 @@
 import React, { useContext, useState } from "react";
-
 import { TermisContext } from "../context/context";
 import Search from "../component/Search/search";
-import XtermTerminal from "../component/Terminal/terminal";
+import Hosts from "../component/Host/hosts";
 
 const GroupPage = () => {
-  const {
-    searchQuery,
-    hosts,
-    view,
-    removeLastIndexFromView,
-    setCurrentDisplay,
-    currentDisplay,
-    addNewTab,
-  } = useContext(TermisContext);
+  const { view, removeLastIndexFromView, setCurrentDisplay, currentDisplay } =
+    useContext(TermisContext);
 
-  const filteredHosts = hosts.filter(
-    (host) =>
-      host.parentId &&
-      host.parentId.includes(currentDisplay.parentId) &&
-      host.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  // remove from the end to the index - 1
-  // at this stage i only work it for length 2 array
   let removeFromViewsArray = (index) => {
-    if (index != view.length - 1) {
+    if (index !== view.length - 1) {
       removeLastIndexFromView();
+
       setCurrentDisplay({
-        page: view[0],
-        identifier: view[0],
+        page: view[view.length - 2],
+        identifier: view[view.length - 2],
       });
     }
   };
 
   return (
-    <div>
+    <div className="mb-[5%]">
       {view.map((item, index) => (
         <React.Fragment key={index}>
           <span
             onClick={() => removeFromViewsArray(index)}
-            style={{ cursor: "pointer", margin: "0 5px" }}
+            className="cursor-pointer mx-3 text-blue-600 font-medium transition-colors duration-300 ease-in-out hover:text-blue-800"
           >
             {item}
           </span>
+
           {index < view.length - 1 && (
-            <span style={{ margin: "0 5px" }}>→</span>
+            <span className="mx-3 text-lg text-gray-500 font-semibold">→</span>
           )}
         </React.Fragment>
       ))}
 
-      <Search />
+      <div className="mt-4">
+        <Search />
+      </div>
 
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-[2%]">
-          {filteredHosts.map((host) => (
-            <div
-              key={host.id}
-              className="bg-white rounded-md shadow-sm p-4 flex items-center space-x-4"
-              onClick={() => {
-
-               
-                  
-                
-                addNewTab(
-                  host.name,
-                  host.id,
-                  "terminal",
-                  host.host,
-                  host.username,
-                  host.privateKey,
-                  host.port,
-                  <XtermTerminal
-                    id = {host.id}
-                    host={host.host}
-                    privateKey={host.privateKey}
-                    username={host.username}
-                    port={host.port}
-                  />,
-                );
-                setCurrentDisplay({ page: "terminal", identifier: host.id });
-               
-              }}
-            >
-              {host.icon}
-              <div>
-                <p className="font-bold text-gray-800">{host.name}</p>
-                <span className="text-sm text-gray-500">
-                  {host.connectionDetails}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="mt-4">
+        <Hosts parentId={currentDisplay.parentId} />
       </div>
     </div>
   );

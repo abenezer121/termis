@@ -12,7 +12,7 @@ const XtermTerminal = (props) => {
   const currentLineRef = useRef("");
 
   const privateKey = props.id;
-  console.log(props)
+  console.log(props);
   useEffect(() => {
     if (terminalRef.current && !terminalInstance.current) {
       terminalInstance.current = new Terminal({
@@ -80,8 +80,7 @@ const XtermTerminal = (props) => {
                 sshId: privateKey,
                 command: currentLineRef.current + "\n",
               });
-             
-            
+
               terminalInstance.current.write("\r\n");
               currentLineRef.current = "";
               break;
@@ -104,11 +103,8 @@ const XtermTerminal = (props) => {
     }
 
     const handleSshData = (_event, { sshId, data }) => {
-      if (sshId === privateKey && terminalInstance.current ) {
-       
-          terminalInstance.current.write(data);
-    
-        
+      if (sshId === privateKey && terminalInstance.current) {
+        terminalInstance.current.write(data);
       }
     };
 
@@ -159,7 +155,7 @@ const XtermTerminal = (props) => {
       if (terminalInstance.current) {
         const response = await ipcRenderer.invoke("ssh-connect", {
           host: props.host,
-          id : privateKey,
+          id: privateKey,
           port: 22,
           username: props.username,
           privateKey: props.privateKey,

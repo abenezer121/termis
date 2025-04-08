@@ -3,7 +3,7 @@ import { TermisContext } from "../../context/context";
 import XtermTerminal from "../Terminal/terminal";
 import { FaUbuntu, FaWindows } from "react-icons/fa";
 
-const Hosts = () => {
+const Hosts = (props) => {
   const { searchQuery, addNewTab, hosts, setCurrentDisplay } =
     useContext(TermisContext);
 
@@ -28,9 +28,16 @@ const Hosts = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const filteredHosts = hosts.filter((host) =>
-    host.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredHosts = props.parentId
+    ? hosts.filter(
+        (host) =>
+          host.parentId &&
+          host.parentId.includes(props.parentId) &&
+          host.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : hosts.filter((host) =>
+        host.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
 
   const gridClass = `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${columns} gap-4`;
 
@@ -50,7 +57,7 @@ const Hosts = () => {
                 host.privateKey,
                 host.port,
                 <XtermTerminal
-                  id = {host.id}
+                  id={host.id}
                   host={host.host}
                   privateKey={host.privateKey}
                   username={host.username}

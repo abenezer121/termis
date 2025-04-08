@@ -1,19 +1,44 @@
-import React, { useContext, useState, useRef, useEffect } from "react";
+import React, { useContext, useState, useRef, useEffect, useCallback } from "react";
 import { TermisContext } from "../../context/context";
-import Modal from "../Modal/modal";
-import AddGroupForm from "../Form/GroupForm";
-import AddHostForm from "../Form/HostForm";
+
+import AddHostModal from "../Modal/AddHostModal";
+import AddGroupModal from "../Modal/AddGroupModal";
 const { ipcRenderer } = window.require("electron");
-
-
 
 const Search = () => {
   const { searchQuery, setSearchQuery } = useContext(TermisContext);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [modalContent, setModalContent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [isHostModalOpen, setHostModalOpen] = useState(false);
+  const [isGroupModalOpen, setGroupModalOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
+
+  const handleDropdownClick = useCallback((option) => {
+    setIsDropdownOpen(false);
+
+    switch (option) {
+      case "Group":
+        setHostModalOpen(false);
+        setGroupModalOpen(true);
+        break;
+      case "Host":
+        setHostModalOpen(true);
+        setGroupModalOpen(false);
+        break;
+      case "AWS Integration":
+      case "Azure Integration":
+      case "Import Configuration":
+        break;
+      default:
+        break;
+    }
+  }, []);
+
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchQuery(e.target.value);
+  }, [setSearchQuery]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -28,89 +53,34 @@ const Search = () => {
     };
   }, []);
 
-  const handleDropdownClick = (option) => {
-    setIsDropdownOpen(false);
-    setIsModalOpen(true);
-
-    switch (option) {
-      case "Group":
-        setModalContent({
-          title: "Group",
-          body: <AddGroupForm />,
-          actionButton: <div></div>,
-        });
-        break;
-
-      case "Host":
-        setModalContent({
-          title: "Host",
-          body: <AddHostForm />,
-          actionButton: (
-            <div></div>),
-        });
-        break;
-
-      case "AWS Integration":
-        setModalContent({
-          title: "AWS Integration",
-          body: <div>Unimplemented</div>,
-          actionButton: (
-            <button className="bg-yellow-500 text-white px-4 py-2 rounded-md">
-              Save AWS Config
-            </button>
-          ),
-        });
-        break;
-
-      case "Azure Integration":
-        setModalContent({
-          title: "Azure Integration",
-          body: <div>Unimplemented</div>,
-          actionButton: (
-            <button className="bg-indigo-500 text-white px-4 py-2 rounded-md">
-              Save Azure Config
-            </button>
-          ),
-        });
-        break;
-
-      case "Import Configuration":
-        setModalContent({
-          title: "Import Configuration",
-          body: <div>Unimplemented</div>,
-          actionButton: (
-            <button className="bg-purple-500 text-white px-4 py-2 rounded-md">
-              Import
-            </button>
-          ),
-        });
-        break;
-
-      default:
-        break;
+ 
+  useEffect(() => {
+    if (!isHostModalOpen && !isGroupModalOpen && inputRef.current) {
+      inputRef.current.blur();
     }
-  };
+  }, [isHostModalOpen, isGroupModalOpen]);
+
+  const closeGroupModal = useCallback(() => {
+    setGroupModalOpen(false);
+  }, []);
+
+  const setHostModal = useCallback(() => {
+    setHostModalOpen(false);
+  }, []);
 
   return (
     <div className="flex items-center gap-2 mb-4">
-      {/* Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={modalContent?.title || ""}
-        actionButton={modalContent?.actionButton}
-      >
-        {modalContent?.body}
-      </Modal>
+      <AddGroupModal isOpen={isGroupModalOpen} onClose={closeGroupModal} />
+      <AddHostModal isOpen={isHostModalOpen} onClose={setHostModal} />
 
-      {/* Search Input */}
       <div className="flex-1 relative">
         <input
+          ref={inputRef}
           type="text"
           placeholder="Search..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-2 pl-8 border rounded-md"
+          onChange={handleSearchChange}
+          className="w-full p-2 pl-8 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <svg
           className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"
@@ -128,7 +98,7 @@ const Search = () => {
         </svg>
       </div>
 
-      {/* Dropdown */}
+   
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -153,36 +123,15 @@ const Search = () => {
         {isDropdownOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
             <div className="py-1">
-              <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleDropdownClick("Group")}
-              >
-                Group
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleDropdownClick("Host")}
-              >
-                Host
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleDropdownClick("AWS Integration")}
-              >
-                AWS Integration
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleDropdownClick("Azure Integration")}
-              >
-                Azure Integration
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleDropdownClick("Import Configuration")}
-              >
-                Import Configuration
-              </button>
+              {["Group", "Host", "AWS Integration", "Azure Integration", "Import Configuration"].map((option) => (
+                <button
+                  key={option}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => handleDropdownClick(option)}
+                >
+                  {option}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -191,4 +140,4 @@ const Search = () => {
   );
 };
 
-export default Search;
+export default React.memo(Search);

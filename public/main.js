@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain ,dialog} = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 
 const path = require("path");
 const isDev = require("electron-is-dev");
@@ -9,7 +9,7 @@ const Datastore = require("nedb");
 const { randomUUID } = require("crypto");
 
 const username = os.userInfo().username;
-console.log(username);
+
 const customDir = path.join("/home", username, "termis");
 
 if (!fs.existsSync(customDir)) {
@@ -42,34 +42,35 @@ fs.stat(path.join(customDir, "termis.db"), (err, stats) => {
   }
 });
 
-
-
-
-let insertHost = async(data) => {
-  let id = randomUUID()
-  return new Promise((resolve , reject) => {
-    db.find( {collection : "hosts" , data : {$elemMatch : { name : data.host}}} , (err , docs)=>{
-      if (err) {
+let insertHost = async (data) => {
+  let id = randomUUID();
+  return new Promise((resolve, reject) => {
+    db.find(
+      { collection: "hosts", data: { $elemMatch: { name: data.host } } },
+      (err, docs) => {
+        if (err) {
           console.error("Error finding hosts:", err);
           reject(err);
-      }else{
-        console.log("Found groups:", docs);
+        } else {
           if (docs.length > 0) {
             reject(new Error(`hosts with ${data.host} already exists`));
           } else {
             db.update(
               { collection: "hosts" },
-              { $push: { data: {
-                    name: data.name, 
-                    host : data.host,
-                    username : data.username,
+              {
+                $push: {
+                  data: {
+                    name: data.name,
+                    host: data.host,
+                    username: data.username,
                     _id: id,
-                    privateKey : data.privateKey,
-                    parentId : data.parentId,
-                    port  : data.port,
-                    password : data.password
-                } 
-              } },
+                    privateKey: data.privateKey,
+                    parentId: data.parentId,
+                    port: data.port,
+                    password: data.password,
+                  },
+                },
+              },
               {},
               (err) => {
                 if (err) {
@@ -82,10 +83,11 @@ let insertHost = async(data) => {
               },
             );
           }
-      }
-    })
-  })
-}
+        }
+      },
+    );
+  });
+};
 
 let insertGroup = async (groupName) => {
   return new Promise((resolve, reject) => {
@@ -133,7 +135,6 @@ const getAllGroups = async () => {
   });
 };
 
-
 const getAllHosts = async () => {
   return new Promise((resolve, reject) => {
     db.find({ collection: "hosts" }, (err, docs) => {
@@ -145,7 +146,6 @@ const getAllHosts = async () => {
     });
   });
 };
-
 
 let sshClients = new Map();
 let win;
@@ -182,7 +182,6 @@ app.on("activate", () => {
 
 ipcMain.handle("ssh-connect", (event, data) => {
   try {
-    console.log(data)
     const sshId = data.id;
     const sshClient = new Client();
 
@@ -193,7 +192,7 @@ ipcMain.handle("ssh-connect", (event, data) => {
           term: "term-256color",
           cols: data.cols || 80,
           rows: data.rows || 24,
-          pty: true
+          pty: true,
         },
         (err, stream) => {
           if (err) {
@@ -201,15 +200,18 @@ ipcMain.handle("ssh-connect", (event, data) => {
             win.webContents.send("ssh-error", { sshId, message: err.message });
             return;
           }
-          
-          stream.write('stty -echo\n');
-          sshClients.set(sshId, { sshClient, sshStream: stream ,write: (cmd) => {
-            lastCommand = cmd;
-            stream.write(`${cmd}\n`);
-          } }  );
-          let buffer = '';
+
+          stream.write("stty -echo\n");
+          sshClients.set(sshId, {
+            sshClient,
+            sshStream: stream,
+            write: (cmd) => {
+              lastCommand = cmd;
+              stream.write(`${cmd}\n`);
+            },
+          });
+
           stream.on("data", (data) => {
-           
             win.webContents.send("ssh-data", { sshId, data: data.toString() });
           });
 
@@ -224,8 +226,7 @@ ipcMain.handle("ssh-connect", (event, data) => {
       console.error(`SSH Client ${sshId} error:`, err);
       win.webContents.send("ssh-error", { sshId, message: err.message });
     });
-  
-   
+
     sshClient.connect({
       host: data.host,
       port: data.port || 22,
@@ -263,7 +264,7 @@ ipcMain.handle("ssh-resize", (event, { sshId, cols, rows }) => {
 
 ipcMain.handle("get-system-data", async (event) => {
   try {
-    const hosts = await getAllHosts()
+    const hosts = await getAllHosts();
     const groups = await getAllGroups();
     let formattedGroups = [];
     let formattedHosts = [];
@@ -276,26 +277,23 @@ ipcMain.handle("get-system-data", async (event) => {
       }));
     }
 
-
-    if (hosts && hosts.length > 0 && hosts[0].data){
+    if (hosts && hosts.length > 0 && hosts[0].data) {
       formattedHosts = hosts[0].data.map((item) => ({
-     
-            id: item._id,
-            name: item.name,
-            connectionDetails: 'ssh, azureadmin',
-            parentId: item.parentId,
-            host: item.host,
-            username: item.username,
-            privateKey: item.privateKey,
-            port: item.port
-
+        id: item._id,
+        name: item.name,
+        connectionDetails: "ssh, azureadmin",
+        parentId: item.parentId,
+        host: item.host,
+        username: item.username,
+        privateKey: item.privateKey,
+        port: item.port,
       }));
     }
 
-    for(let i =0; i < formattedGroups.length; i++){
-      for(let j =0; j < formattedHosts.length; j++){
-        if (formattedHosts[j].parentId == formattedGroups[i].id){
-          formattedGroups[i].hostsCount = formattedGroups[i].hostsCount + 1
+    for (let i = 0; i < formattedGroups.length; i++) {
+      for (let j = 0; j < formattedHosts.length; j++) {
+        if (formattedHosts[j].parentId == formattedGroups[i].id) {
+          formattedGroups[i].hostsCount = formattedGroups[i].hostsCount + 1;
         }
       }
     }
@@ -311,7 +309,6 @@ ipcMain.handle("get-system-data", async (event) => {
     };
   }
 });
-
 
 function readDirectory(dirPath) {
   try {
@@ -351,7 +348,6 @@ function readDirectory(dirPath) {
   }
 }
 
-
 ipcMain.handle("get-file-system-data", async (event, dirPath) => {
   try {
     if (!fs.existsSync(dirPath)) {
@@ -376,46 +372,41 @@ ipcMain.handle("create-group", async (event, name) => {
   }
 });
 
-
-ipcMain.handle("create-host" , async(event , data)=>{
+ipcMain.handle("create-host", async (event, data) => {
   try {
-
     const privateKeyPath = path.resolve(data.privateKey);
     if (!fs.existsSync(privateKeyPath)) {
       throw new Error("Private key file does not exist");
     }
- 
-    let buffer = fs.readFileSync(data.privateKey)
-    let privateKey = Buffer.from(buffer).toString('utf8')
- 
+
+    let buffer = fs.readFileSync(data.privateKey);
+    let privateKey = Buffer.from(buffer).toString("utf8");
+
     let hostData = {
-      name: data.label, 
-      host : data.address,
-      username : data.username,
-      privateKey : privateKey,
-      parentId : data.parentId,
-      port  : data.port,
-      password : data.password
-    }
+      name: data.label,
+      host: data.address,
+      username: data.username,
+      privateKey: privateKey,
+      parentId: data.parentId,
+      port: data.port,
+      password: data.password,
+    };
     let id = await insertHost(hostData);
     return {
-     
       id: id,
       name: data.label,
-      connectionDetails: 'ssh, azureadmin',
+      connectionDetails: "ssh, azureadmin",
       parentId: data.parentId,
       host: data.address,
       username: data.username,
       privateKey: privateKey,
-      port: data.port
-
-}
+      port: data.port,
+    };
   } catch (error) {
     console.error("Error adding group:", error.message);
-    throw new Error(error.message); 
+    throw new Error(error.message);
   }
-})
-
+});
 
 ipcMain.handle("open-file-dialog", async (event) => {
   const result = await dialog.showOpenDialog({
@@ -424,11 +415,87 @@ ipcMain.handle("open-file-dialog", async (event) => {
   });
 
   if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+
+  return null;
+});
+
+
+ipcMain.handle("open-folder-dialog", async (event) => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
     return result.filePaths[0]; 
   }
 
   return null;
 });
+
+
+ipcMain.handle('export-group' , async (event , id , name , selectedFolder) => {
+
+ try{
+  const hosts = await getAllHosts();
+  const groups = await getAllGroups();
+  let formattedGroups = [];
+  let formattedHosts = [];
+
+  if (groups && groups.length > 0 && groups[0].data) {
+    formattedGroups = groups[0].data.map((item) => ({
+      id: item._id,
+      name: item.name,
+      hostsCount: 0,
+    }));
+  }
+
+  if (hosts && hosts.length > 0 && hosts[0].data) {
+    formattedHosts = hosts[0].data
+    .filter((item) => item.parentId === id) 
+    .map((item) => ({
+      id: item._id,
+      name: item.name,
+      connectionDetails: "ssh, azureadmin",
+      parentId: item.parentId,
+      host: item.host,
+      username: item.username,
+      privateKey: item.privateKey,
+      port: item.port,
+    }));
+  }
+
+  for (let i = 0; i < formattedGroups.length; i++) {
+    for (let j = 0; j < formattedHosts.length; j++) {
+      if (formattedHosts[j].parentId == formattedGroups[i].id) {
+        formattedGroups[i].hostsCount = formattedGroups[i].hostsCount + 1;
+      }
+    }
+  }
+
+  let json = {
+    groups : formattedGroups,
+    hosts : formattedHosts
+  }
+
+  const currentDate = new Date().toISOString().split('T'); 
+  const fileName = `${name}_${currentDate}.json`;
+  const filePath = path.join(selectedFolder, fileName);
+
+
+  fs.writeFileSync(filePath, JSON.stringify(json, null, 2), 'utf8');
+
+  console.log(`File saved successfully at: ${filePath}`);
+  return { success: true, message: `File saved successfully at: ${filePath}` };
+
+ }catch(err){
+  console.error('Error exporting group:', err);
+    return { success: false, message: 'Failed to export group', error: err.message };
+ }
+  
+})
+
 
 ipcMain.handle("get-all-groups", async (event) => {
   return getAllGroups();

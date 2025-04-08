@@ -13,5 +13,3 @@ This project is focused on building a modern SSH client and server management to
 In the project directory, you can run:
 
 ### `yarn electron:serve`
-
-
