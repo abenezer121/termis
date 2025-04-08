@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain ,dialog} = require("electron");
+
 const path = require("path");
 const isDev = require("electron-is-dev");
 const { Client } = require("ssh2");
@@ -41,36 +42,81 @@ fs.stat(path.join(customDir, "termis.db"), (err, stats) => {
   }
 });
 
-let insertGroup = async (groupName) => {
- 
-  
-  return new Promise((resolve, reject) => {
-    db.find({ collection: "groups", data: { $elemMatch: { name: groupName } } }, (err, docs) => {
+
+
+
+let insertHost = async(data) => {
+  return new Promise((resolve , reject) => {
+    db.find( {collection : "hosts" , data : {$elemMatch : { name : data.host}}} , (err , docs)=>{
       if (err) {
-        console.error("Error finding group:", err);
-        reject(err);
-      } else {
+          console.error("Error finding hosts:", err);
+          reject(err);
+      }else{
         console.log("Found groups:", docs);
-        if (docs.length > 0) {
-          reject(new Error("Group with name already exists"));
-        } else {
-          db.update(
-            { collection: "groups" },
-            { $push: { data: { name: groupName, _id: randomUUID() } } },
-            {},
-            (err) => {
-              if (err) {
-                console.error("Error inserting group:", err);
-                reject(err);
-              } else {
-                console.log("Group inserted successfully");
-                resolve("Data Inserted");
-              }
-            }
-          );
-        }
+          if (docs.length > 0) {
+            reject(new Error(`hosts with ${data.host} already exists`));
+          } else {
+            db.update(
+              { collection: "hosts" },
+              { $push: { data: {
+                    name: data.name, 
+                    host : data.host,
+                    username : data.username,
+                    _id: randomUUID(),
+                    privateKey : data.privateKey,
+                    parentId : data.parentId,
+                    port  : data.port,
+                    password : data.password
+                } 
+              } },
+              {},
+              (err) => {
+                if (err) {
+                  console.error("Error inserting host:", err);
+                  reject(err);
+                } else {
+                  console.log("Host inserted successfully");
+                  resolve("Host Inserted");
+                }
+              },
+            );
+          }
       }
-    });
+    })
+  })
+}
+
+let insertGroup = async (groupName) => {
+  return new Promise((resolve, reject) => {
+    db.find(
+      { collection: "groups", data: { $elemMatch: { name: groupName } } },
+      (err, docs) => {
+        if (err) {
+          console.error("Error finding group:", err);
+          reject(err);
+        } else {
+          console.log("Found groups:", docs);
+          if (docs.length > 0) {
+            reject(new Error("Group with name already exists"));
+          } else {
+            db.update(
+              { collection: "groups" },
+              { $push: { data: { name: groupName, _id: randomUUID() } } },
+              {},
+              (err) => {
+                if (err) {
+                  console.error("Error inserting group:", err);
+                  reject(err);
+                } else {
+                  console.log("Group inserted successfully");
+                  resolve("Data Inserted");
+                }
+              },
+            );
+          }
+        }
+      },
+    );
   });
 };
 
@@ -85,6 +131,20 @@ const getAllGroups = async () => {
     });
   });
 };
+
+
+const getAllHosts = async () => {
+  return new Promise((resolve, reject) => {
+    db.find({ collection: "hosts" }, (err, docs) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(docs);
+      }
+    });
+  });
+};
+
 
 let sshClients = new Map();
 let win;
@@ -121,7 +181,8 @@ app.on("activate", () => {
 
 ipcMain.handle("ssh-connect", (event, data) => {
   try {
-    const sshId = data.privateKey;
+    console.log(data)
+    const sshId = data.id;
     const sshClient = new Client();
 
     sshClient.on("ready", () => {
@@ -156,11 +217,13 @@ ipcMain.handle("ssh-connect", (event, data) => {
       console.error(`SSH Client ${sshId} error:`, err);
       win.webContents.send("ssh-error", { sshId, message: err.message });
     });
+
+    const privateKeyString = Buffer.from(data.privateKey.data).toString('utf8');
     sshClient.connect({
       host: data.host,
       port: data.port || 22,
       username: data.username,
-      privateKey: fs.readFileSync(data.privateKey),
+      privateKey: privateKeyString,
     });
     return { sshId };
   } catch (err) {
@@ -193,25 +256,48 @@ ipcMain.handle("ssh-resize", (event, { sshId, cols, rows }) => {
 
 ipcMain.handle("get-system-data", async (event) => {
   try {
+    const hosts = await getAllHosts()
     const groups = await getAllGroups();
     let formattedGroups = [];
+    let formattedHosts = [];
 
     if (groups && groups.length > 0 && groups[0].data) {
-    
       formattedGroups = groups[0].data.map((item) => ({
         id: item._id,
         name: item.name,
-        hostsCount: 1,
+        hostsCount: 0,
       }));
     }
-  
-    
+
+
+    if (hosts && hosts.length > 0 && hosts[0].data){
+      formattedHosts = hosts[0].data.map((item) => ({
+     
+            id: item._id,
+            name: item.name,
+            connectionDetails: 'ssh, azureadmin',
+            parentId: item.parentId,
+            host: item.host,
+            username: item.username,
+            privateKey: item.privateKey,
+            port: item.port
+
+      }));
+    }
+
+    for(let i =0; i < formattedGroups.length; i++){
+      for(let j =0; j < formattedHosts.length; j++){
+        if (formattedHosts[j].parentId == formattedGroups[i].id){
+          formattedGroups[i].hostsCount = formattedGroups[i].hostsCount + 1
+        }
+      }
+    }
+
     return {
-      hosts: [],
+      hosts: formattedHosts,
       groups: formattedGroups,
     };
   } catch (err) {
-   
     return {
       hosts: [],
       groups: [],
@@ -219,7 +305,7 @@ ipcMain.handle("get-system-data", async (event) => {
   }
 });
 
-// Function to recursively read directory contents
+
 function readDirectory(dirPath) {
   try {
     const files = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -258,7 +344,7 @@ function readDirectory(dirPath) {
   }
 }
 
-// Handle IPC request to get file system data
+
 ipcMain.handle("get-file-system-data", async (event, dirPath) => {
   try {
     if (!fs.existsSync(dirPath)) {
@@ -281,6 +367,40 @@ ipcMain.handle("create-group", async (event, name) => {
     console.error("Error adding group:", error.message);
     return -1;
   }
+});
+
+
+ipcMain.handle("create-host" , async(event , data)=>{
+  try {
+    let hostData = {
+      name: data.label, 
+      host : data.address,
+      username : data.username,
+      privateKey : fs.readFileSync(data.privateKey),
+      parentId : data.parentId,
+      port  : data.port,
+      password : data.password
+    }
+    let newData = await insertHost(hostData);
+    return 1;
+  } catch (error) {
+    console.error("Error adding group:", error.message);
+    return -1;
+  }
+})
+
+
+ipcMain.handle("open-file-dialog", async (event) => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [{ name: "Key Files", extensions: ["pem", "key"] }],
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0]; 
+  }
+
+  return null;
 });
 
 ipcMain.handle("get-all-groups", async (event) => {
@@ -307,37 +427,3 @@ function cleanupSshClient(sshId) {
 app.on("before-quit", () => {
   sshClients.forEach((_, sshId) => cleanupSshClient(sshId));
 });
-
-/*
-{
-      id: 1,
-      name: 'gtest1',
-     
-      connectionDetails: 'ssh, azureadmin',
-      parentId: 'f3gda',
-      host: '9.141.20.46',
-      username: 'azureadmin',
-      privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_test_1.pem',
-      port: 22
-    },
-    {
-      id: 2,
-      name: 'prod1',
-      connectionDetails: 'ssh, azureadmin',
-      parentId: 'f3gda',
-      host: '9.141.19.175',
-      username: 'azureadmin',
-      privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_prod_1.pem',
-      port: 22
-    },
-    {
-      id: 3,
-      name: 'postoffice',
-      connectionDetails: 'ssh, azureadmin',
-      parentId: 'f3gde',
-      host: '9.141.19.175',
-      username: 'azureadmin',
-      privateKey: '/home/abenezer121/Downloads/sshkeys/gebeta_key_prod_1.pem',
-      port: 22
-    }
-*/

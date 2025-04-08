@@ -67,6 +67,7 @@ const GroupPage = () => {
                   host.privateKey,
                   host.port,
                   <XtermTerminal
+                    id={host.id}
                     host={host.host}
                     privateKey={host.privateKey}
                     username={host.username}
