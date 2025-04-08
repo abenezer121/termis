@@ -192,6 +192,7 @@ ipcMain.handle("ssh-connect", (event, data) => {
           term: "term-256color",
           cols: data.cols || 80,
           rows: data.rows || 24,
+          pty: true
         },
         (err, stream) => {
           if (err) {
@@ -199,10 +200,15 @@ ipcMain.handle("ssh-connect", (event, data) => {
             win.webContents.send("ssh-error", { sshId, message: err.message });
             return;
           }
-
-          sshClients.set(sshId, { sshClient, sshStream: stream });
-
+          
+          stream.write('stty -echo\n');
+          sshClients.set(sshId, { sshClient, sshStream: stream ,write: (cmd) => {
+            lastCommand = cmd;
+            stream.write(`${cmd}\n`);
+          } }  );
+          let buffer = '';
           stream.on("data", (data) => {
+           
             win.webContents.send("ssh-data", { sshId, data: data.toString() });
           });
 
@@ -217,7 +223,7 @@ ipcMain.handle("ssh-connect", (event, data) => {
       console.error(`SSH Client ${sshId} error:`, err);
       win.webContents.send("ssh-error", { sshId, message: err.message });
     });
-
+  
     const privateKeyString = Buffer.from(data.privateKey.data).toString('utf8');
     sshClient.connect({
       host: data.host,

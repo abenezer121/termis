@@ -51,8 +51,11 @@ const AddHostForm = () => {
       if (response === 1) {
         const data = await ipcRenderer.invoke("get-system-data");
 
-        if (data.hosts) setHosts(data.hosts);
-        if (data.groups) setGroups(data.groups);
+        if (data.hosts) {
+            console.log(data.hosts)
+            setHosts(data.hosts);
+        }
+      
 
         setFormData({
             address: "",

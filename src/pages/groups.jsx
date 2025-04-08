@@ -59,21 +59,28 @@ const GroupPage = () => {
               key={host.id}
               className="bg-white rounded-md shadow-sm p-4 flex items-center space-x-4"
               onClick={() => {
-                setCurrentDisplay({ page: "terminal", identifier: host.id });
+
+               
+                  
+                
                 addNewTab(
                   host.name,
                   host.id,
-                  "terminal".host.username,
+                  "terminal",
+                  host.host,
+                  host.username,
                   host.privateKey,
                   host.port,
                   <XtermTerminal
-                    id={host.id}
+                    id = {host.id}
                     host={host.host}
                     privateKey={host.privateKey}
                     username={host.username}
                     port={host.port}
                   />,
                 );
+                setCurrentDisplay({ page: "terminal", identifier: host.id });
+               
               }}
             >
               {host.icon}

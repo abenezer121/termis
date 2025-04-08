@@ -8,9 +8,9 @@ const XtermTerminal = (props) => {
   const terminalRef = useRef(null);
   const terminalInstance = useRef(null);
   const fitAddonInstance = useRef(null);
-
   const [isConnected, setIsConnected] = useState(false);
   const currentLineRef = useRef("");
+
   const privateKey = props.id;
   console.log(props)
   useEffect(() => {
@@ -80,6 +80,8 @@ const XtermTerminal = (props) => {
                 sshId: privateKey,
                 command: currentLineRef.current + "\n",
               });
+             
+            
               terminalInstance.current.write("\r\n");
               currentLineRef.current = "";
               break;
@@ -102,8 +104,11 @@ const XtermTerminal = (props) => {
     }
 
     const handleSshData = (_event, { sshId, data }) => {
-      if (sshId === privateKey && terminalInstance.current) {
-        terminalInstance.current.write(data);
+      if (sshId === privateKey && terminalInstance.current ) {
+       
+          terminalInstance.current.write(data);
+    
+        
       }
     };
 
