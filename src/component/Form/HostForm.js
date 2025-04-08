@@ -48,14 +48,9 @@ const AddHostForm = () => {
 
       const response = await ipcRenderer.invoke("create-host", formData);
 
-      if (response === 1) {
-        const data = await ipcRenderer.invoke("get-system-data");
-
-        if (data.hosts) {
-            console.log(data.hosts)
-            setHosts(data.hosts);
-        }
-      
+      if (response) {
+       
+        setHosts((prev) => [...prev, response]);
 
         setFormData({
             address: "",
@@ -67,9 +62,8 @@ const AddHostForm = () => {
             password: "",
           });
         setIsModalOpen(false);
-      } else if (response === -1) {
-        console.error("Failed to create group");
-        alert("Failed to create group. Please try again.");
+      } else  {
+        throw new Error("Unexpected response format");
       }
     } catch (error) {
       console.error("Unexpected error:", error);

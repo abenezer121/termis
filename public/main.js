@@ -46,6 +46,7 @@ fs.stat(path.join(customDir, "termis.db"), (err, stats) => {
 
 
 let insertHost = async(data) => {
+  let id = randomUUID()
   return new Promise((resolve , reject) => {
     db.find( {collection : "hosts" , data : {$elemMatch : { name : data.host}}} , (err , docs)=>{
       if (err) {
@@ -62,7 +63,7 @@ let insertHost = async(data) => {
                     name: data.name, 
                     host : data.host,
                     username : data.username,
-                    _id: randomUUID(),
+                    _id: id,
                     privateKey : data.privateKey,
                     parentId : data.parentId,
                     port  : data.port,
@@ -76,7 +77,7 @@ let insertHost = async(data) => {
                   reject(err);
                 } else {
                   console.log("Host inserted successfully");
-                  resolve("Host Inserted");
+                  resolve(id);
                 }
               },
             );
@@ -224,12 +225,12 @@ ipcMain.handle("ssh-connect", (event, data) => {
       win.webContents.send("ssh-error", { sshId, message: err.message });
     });
   
-    const privateKeyString = Buffer.from(data.privateKey.data).toString('utf8');
+   
     sshClient.connect({
       host: data.host,
       port: data.port || 22,
       username: data.username,
-      privateKey: privateKeyString,
+      privateKey: data.privateKey,
     });
     return { sshId };
   } catch (err) {
@@ -378,20 +379,40 @@ ipcMain.handle("create-group", async (event, name) => {
 
 ipcMain.handle("create-host" , async(event , data)=>{
   try {
+
+    const privateKeyPath = path.resolve(data.privateKey);
+    if (!fs.existsSync(privateKeyPath)) {
+      throw new Error("Private key file does not exist");
+    }
+ 
+    let buffer = fs.readFileSync(data.privateKey)
+    let privateKey = Buffer.from(buffer).toString('utf8')
+ 
     let hostData = {
       name: data.label, 
       host : data.address,
       username : data.username,
-      privateKey : fs.readFileSync(data.privateKey),
+      privateKey : privateKey,
       parentId : data.parentId,
       port  : data.port,
       password : data.password
     }
-    let newData = await insertHost(hostData);
-    return 1;
+    let id = await insertHost(hostData);
+    return {
+     
+      id: id,
+      name: data.label,
+      connectionDetails: 'ssh, azureadmin',
+      parentId: data.parentId,
+      host: data.address,
+      username: data.username,
+      privateKey: privateKey,
+      port: data.port
+
+}
   } catch (error) {
     console.error("Error adding group:", error.message);
-    return -1;
+    throw new Error(error.message); 
   }
 })
 
