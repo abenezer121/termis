@@ -1,11 +1,11 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { TermisContext } from "../../context/context";
 const { ipcRenderer } = window.require("electron");
 
 const AddGroupModal = ({ isOpen, onClose }) => {
   const [text, setText] = useState("");
   const { setHosts, setGroups } = useContext(TermisContext);
-
+ 
   const handleAddGroup = async () => {
     try {
       if (!text.trim()) {
@@ -64,12 +64,7 @@ const AddGroupModal = ({ isOpen, onClose }) => {
 
         <div>
           <div className="mb-4">
-            <label
-              htmlFor="group-label"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Group Label
-            </label>
+            
             <input
               id="group-label"
               type="text"
