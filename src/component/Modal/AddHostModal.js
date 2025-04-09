@@ -1,4 +1,4 @@
-import React, { useContext, useState , useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { TermisContext } from "../../context/context";
 
 const { ipcRenderer } = window.require("electron");
@@ -6,7 +6,6 @@ const { ipcRenderer } = window.require("electron");
 const AddHostModal = ({ isOpen, onClose }) => {
   const { setHosts, setGroups, currentDisplay } = useContext(TermisContext);
 
-  
   const [formData, setFormData] = useState({
     address: "",
     label: "",
@@ -16,7 +15,6 @@ const AddHostModal = ({ isOpen, onClose }) => {
     port: 22,
     username: "",
     password: "",
-    
   });
 
   const handleChange = (e) => {
@@ -47,14 +45,15 @@ const AddHostModal = ({ isOpen, onClose }) => {
         alert("Fields cannot be empty");
         return;
       }
-      console.log(currentDisplay.page)
-      formData.parentId=currentDisplay.page === "group" ? currentDisplay.parentId : ""
-      
+      console.log(currentDisplay.page);
+      formData.parentId =
+        currentDisplay.page === "group" ? currentDisplay.parentId : "";
+
       const response = await ipcRenderer.invoke("create-host", formData);
 
       if (response) {
         setHosts((prev) => [...prev, response]);
-       
+
         setFormData({
           address: "",
           label: "",
@@ -178,7 +177,6 @@ const AddHostModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="mb-4">
-         
             <div className="mt-2">
               <label
                 htmlFor="username"

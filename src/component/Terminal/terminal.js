@@ -8,10 +8,10 @@ const XtermTerminal = (props) => {
   const terminalRef = useRef(null);
   const terminalInstance = useRef(null);
   const fitAddonInstance = useRef(null);
- 
   const currentLineRef = useRef("");
-  const isConnected = useRef(false)
+  const isConnected = useRef(false);
   const connectionAttempted = useRef(false);
+  const [showConnecting, setShowConnecting] = useState(true);
 
   const privateKey = props.id;
 
@@ -82,7 +82,6 @@ const XtermTerminal = (props) => {
                 sshId: privateKey,
                 command: currentLineRef.current + "\n",
               });
-
               terminalInstance.current.write("\r\n");
               currentLineRef.current = "";
               break;
@@ -113,8 +112,8 @@ const XtermTerminal = (props) => {
     const handleSshError = (_event, { message }) => {
       if (terminalInstance.current) {
         terminalInstance.current.write(`\r\nError: ${message}\r\n`);
-     
         isConnected.current = false;
+        setShowConnecting(true);
       }
     };
 
@@ -124,13 +123,13 @@ const XtermTerminal = (props) => {
     return () => {
       ipcRenderer.removeListener("ssh-data", handleSshData);
       ipcRenderer.removeListener("ssh-error", handleSshError);
-
       if (terminalInstance.current) {
         terminalInstance.current.dispose();
         terminalInstance.current = null;
       }
     };
   }, [privateKey]);
+
   useEffect(() => {
     const resizeTerminal = () => {
       if (fitAddonInstance.current && terminalInstance.current) {
@@ -156,6 +155,7 @@ const XtermTerminal = (props) => {
   const handleConnect = async () => {
     try {
       if (terminalInstance.current) {
+        setShowConnecting(true);
         const response = await ipcRenderer.invoke("ssh-connect", {
           host: props.host,
           id: privateKey,
@@ -167,6 +167,7 @@ const XtermTerminal = (props) => {
         });
 
         isConnected.current = true;
+        setShowConnecting(false);
         terminalInstance.current.focus();
       }
     } catch (error) {
@@ -177,25 +178,30 @@ const XtermTerminal = (props) => {
         );
       }
       isConnected.current = false;
+      setShowConnecting(true);
     }
   };
 
   useEffect(() => {
     if (!connectionAttempted.current && !isConnected.current) {
-      console.log("hello there")
       connectionAttempted.current = true;
       handleConnect();
     }
   }, []);
 
   return (
-    <div className="flex flex-col h-[90%] w-full">
-      
+    <div className="flex flex-col h-[90%] w-full relative">
       <div
         ref={terminalRef}
-        className="flex-1 bg-black  overflow-auto pb-5"
+        className="flex-1 bg-black overflow-auto pb-5"
         onClick={() => terminalInstance.current?.focus()}
       />
+
+      {showConnecting && (
+        <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+          <div className="text-white text-lg">Connecting...</div>
+        </div>
+      )}
     </div>
   );
 };

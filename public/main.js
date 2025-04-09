@@ -374,8 +374,7 @@ ipcMain.handle("create-group", async (event, name) => {
 
 ipcMain.handle("create-host", async (event, data) => {
   try {
-
-    console.log(data)
+    console.log(data);
     const privateKeyPath = path.resolve(data.privateKey);
     if (!fs.existsSync(privateKeyPath)) {
       throw new Error("Private key file does not exist");
