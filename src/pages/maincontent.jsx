@@ -11,7 +11,7 @@ const MainContentSection = () => {
   const { currentDisplay } = useContext(TermisContext);
 
   return (
-    <div className="flex-1 p-4">
+    <div className={currentDisplay.page == "terminal" ? "flex-1" : "flex-1 p-4"}>
       <div
         style={{
           display: currentDisplay.page === "servers" ? "block" : "none",

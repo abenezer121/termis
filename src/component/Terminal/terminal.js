@@ -8,11 +8,13 @@ const XtermTerminal = (props) => {
   const terminalRef = useRef(null);
   const terminalInstance = useRef(null);
   const fitAddonInstance = useRef(null);
-  const [isConnected, setIsConnected] = useState(false);
+ 
   const currentLineRef = useRef("");
+  const isConnected = useRef(false)
+  const connectionAttempted = useRef(false);
 
   const privateKey = props.id;
-  console.log(props);
+
   useEffect(() => {
     if (terminalRef.current && !terminalInstance.current) {
       terminalInstance.current = new Terminal({
@@ -111,7 +113,8 @@ const XtermTerminal = (props) => {
     const handleSshError = (_event, { message }) => {
       if (terminalInstance.current) {
         terminalInstance.current.write(`\r\nError: ${message}\r\n`);
-        setIsConnected(false);
+     
+        isConnected.current = false;
       }
     };
 
@@ -163,7 +166,7 @@ const XtermTerminal = (props) => {
           rows: terminalInstance.current.rows,
         });
 
-        setIsConnected(true);
+        isConnected.current = true;
         terminalInstance.current.focus();
       }
     } catch (error) {
@@ -173,23 +176,24 @@ const XtermTerminal = (props) => {
           `\r\nFailed to connect to SSH: ${error.message}\r\n`,
         );
       }
-      setIsConnected(false);
+      isConnected.current = false;
     }
   };
 
+  useEffect(() => {
+    if (!connectionAttempted.current && !isConnected.current) {
+      console.log("hello there")
+      connectionAttempted.current = true;
+      handleConnect();
+    }
+  }, []);
+
   return (
-    <div className="flex flex-col h-screen">
-      <div className="p-4">
-        <button
-          onClick={handleConnect}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none"
-        >
-          {isConnected ? "Connected" : "Connect to SSH"}
-        </button>
-      </div>
+    <div className="flex flex-col h-[90%] w-full">
+      
       <div
         ref={terminalRef}
-        className="flex-1 bg-black"
+        className="flex-1 bg-black  overflow-auto pb-5"
         onClick={() => terminalInstance.current?.focus()}
       />
     </div>
