@@ -421,81 +421,81 @@ ipcMain.handle("open-file-dialog", async (event) => {
   return null;
 });
 
-
 ipcMain.handle("open-folder-dialog", async (event) => {
   const result = await dialog.showOpenDialog({
     properties: ["openDirectory"],
   });
 
   if (!result.canceled && result.filePaths.length > 0) {
-    return result.filePaths[0]; 
+    return result.filePaths[0];
   }
 
   return null;
 });
 
+ipcMain.handle("export-group", async (event, id, name, selectedFolder) => {
+  try {
+    const hosts = await getAllHosts();
+    const groups = await getAllGroups();
+    let formattedGroups = [];
+    let formattedHosts = [];
 
-ipcMain.handle('export-group' , async (event , id , name , selectedFolder) => {
+    if (groups && groups.length > 0 && groups[0].data) {
+      formattedGroups = groups[0].data.map((item) => ({
+        id: item._id,
+        name: item.name,
+        hostsCount: 0,
+      }));
+    }
 
- try{
-  const hosts = await getAllHosts();
-  const groups = await getAllGroups();
-  let formattedGroups = [];
-  let formattedHosts = [];
+    if (hosts && hosts.length > 0 && hosts[0].data) {
+      formattedHosts = hosts[0].data
+        .filter((item) => item.parentId === id)
+        .map((item) => ({
+          id: item._id,
+          name: item.name,
+          connectionDetails: "ssh, azureadmin",
+          parentId: item.parentId,
+          host: item.host,
+          username: item.username,
+          privateKey: item.privateKey,
+          port: item.port,
+        }));
+    }
 
-  if (groups && groups.length > 0 && groups[0].data) {
-    formattedGroups = groups[0].data.map((item) => ({
-      id: item._id,
-      name: item.name,
-      hostsCount: 0,
-    }));
-  }
-
-  if (hosts && hosts.length > 0 && hosts[0].data) {
-    formattedHosts = hosts[0].data
-    .filter((item) => item.parentId === id) 
-    .map((item) => ({
-      id: item._id,
-      name: item.name,
-      connectionDetails: "ssh, azureadmin",
-      parentId: item.parentId,
-      host: item.host,
-      username: item.username,
-      privateKey: item.privateKey,
-      port: item.port,
-    }));
-  }
-
-  for (let i = 0; i < formattedGroups.length; i++) {
-    for (let j = 0; j < formattedHosts.length; j++) {
-      if (formattedHosts[j].parentId == formattedGroups[i].id) {
-        formattedGroups[i].hostsCount = formattedGroups[i].hostsCount + 1;
+    for (let i = 0; i < formattedGroups.length; i++) {
+      for (let j = 0; j < formattedHosts.length; j++) {
+        if (formattedHosts[j].parentId == formattedGroups[i].id) {
+          formattedGroups[i].hostsCount = formattedGroups[i].hostsCount + 1;
+        }
       }
     }
+
+    let json = {
+      groups: formattedGroups,
+      hosts: formattedHosts,
+    };
+
+    const currentDate = new Date().toISOString().split("T");
+    const fileName = `${name}_${currentDate}.json`;
+    const filePath = path.join(selectedFolder, fileName);
+
+    fs.writeFileSync(filePath, JSON.stringify(json, null, 2), "utf8");
+
+    console.log(`File saved successfully at: ${filePath}`);
+    return {
+      success: true,
+      message: `File saved successfully at: ${filePath}`,
+    };
+  } catch (err) {
+    console.error("Error exporting group:", err);
+    return {
+      success: false,
+      message: "Failed to export group",
+      error: err.message,
+    };
   }
-
-  let json = {
-    groups : formattedGroups,
-    hosts : formattedHosts
-  }
-
-  const currentDate = new Date().toISOString().split('T'); 
-  const fileName = `${name}_${currentDate}.json`;
-  const filePath = path.join(selectedFolder, fileName);
-
-
-  fs.writeFileSync(filePath, JSON.stringify(json, null, 2), 'utf8');
-
-  console.log(`File saved successfully at: ${filePath}`);
-  return { success: true, message: `File saved successfully at: ${filePath}` };
-
- }catch(err){
-  console.error('Error exporting group:', err);
-    return { success: false, message: 'Failed to export group', error: err.message };
- }
-  
-})
-
+});
 
 ipcMain.handle("get-all-groups", async (event) => {
   return getAllGroups();

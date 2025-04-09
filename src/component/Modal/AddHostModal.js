@@ -1,12 +1,10 @@
 import React, { useContext, useState } from "react";
-import { FiFolder, FiMoreVertical } from "react-icons/fi";
 import { TermisContext } from "../../context/context";
 
 const { ipcRenderer } = window.require("electron");
 
 const AddHostModal = ({ isOpen, onClose }) => {
   const { setHosts, setGroups, currentDisplay } = useContext(TermisContext);
-
 
   const [formData, setFormData] = useState({
     address: "",
@@ -53,7 +51,7 @@ const AddHostModal = ({ isOpen, onClose }) => {
 
       if (response) {
         setHosts((prev) => [...prev, response]);
-       
+
         setFormData({
           address: "",
           label: "",
@@ -177,7 +175,6 @@ const AddHostModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="mb-4">
-         
             <div className="mt-2">
               <label
                 htmlFor="username"
@@ -219,7 +216,7 @@ const AddHostModal = ({ isOpen, onClose }) => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleFilePicker}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer"
+                className="mr-[2%] inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer"
               >
                 <span>Private Key</span>
                 <svg
@@ -231,7 +228,7 @@ const AddHostModal = ({ isOpen, onClose }) => {
                   <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" />
                 </svg>
               </button>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 break-all overflow-hidden max-w-full block">
                 {formData.privateKey ? formData.privateKey : "No file selected"}
               </span>
             </div>

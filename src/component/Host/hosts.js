@@ -4,7 +4,7 @@ import XtermTerminal from "../Terminal/terminal";
 import { FaUbuntu, FaWindows } from "react-icons/fa";
 
 const Hosts = (props) => {
-  const { searchQuery, addNewTab, hosts, setCurrentDisplay } =
+  const { tabs, searchQuery, addNewTab, hosts, setCurrentDisplay } =
     useContext(TermisContext);
 
   const [columns, setColumns] = useState(3);
@@ -48,22 +48,32 @@ const Hosts = (props) => {
         {filteredHosts.map((host) => (
           <div
             onClick={() => {
-              addNewTab(
-                host.name,
-                host.id,
-                "terminal",
-                host.host,
-                host.username,
-                host.privateKey,
-                host.port,
-                <XtermTerminal
-                  id={host.id}
-                  host={host.host}
-                  privateKey={host.privateKey}
-                  username={host.username}
-                  port={host.port}
-                />,
-              );
+              let exist = false;
+              for (let i = 0; i < tabs.length; i++) {
+                if (tabs[i].identifier == host.id) {
+                  exist = true;
+                }
+              }
+
+              if (!exist) {
+                addNewTab(
+                  host.name,
+                  host.id,
+                  "terminal",
+                  host.host,
+                  host.username,
+                  host.privateKey,
+                  host.port,
+                  <XtermTerminal
+                    id={host.id}
+                    host={host.host}
+                    privateKey={host.privateKey}
+                    username={host.username}
+                    port={host.port}
+                  />,
+                );
+              }
+
               setCurrentDisplay({ page: "terminal", identifier: host.id });
             }}
             key={host.id}

@@ -10,9 +10,9 @@ const ServersTab = () => {
   const { groups, setCurrentDisplay, addToView } = useContext(TermisContext);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [groupName , setGroupName] = useState("")
-  const [groupId ,setGroupId] = useState("")
-  
+  const [groupName, setGroupName] = useState("");
+  const [groupId, setGroupId] = useState("");
+
   const toggleDropdown = (index) => {
     setActiveDropdown(activeDropdown === index ? null : index);
   };
@@ -36,7 +36,12 @@ const ServersTab = () => {
     <div>
       <Search />
 
-      <ExportCollectionModal isOpen={isModalOpen} onClose={closeModal} name={groupName} id={groupId} />
+      <ExportCollectionModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        name={groupName}
+        id={groupId}
+      />
 
       <h3 className="text-lg font-semibold mb-2">Groups</h3>
       <div className="mb-4 mt-[2%] grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -82,7 +87,6 @@ const ServersTab = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(index);
-
                           }}
                         >
                           Delete
@@ -92,8 +96,8 @@ const ServersTab = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             handleExport(index);
-                            setGroupName(value.name)
-                            setGroupId(value.id)
+                            setGroupName(value.name);
+                            setGroupId(value.id);
                           }}
                         >
                           Export

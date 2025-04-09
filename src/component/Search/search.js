@@ -1,4 +1,10 @@
-import React, { useContext, useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { TermisContext } from "../../context/context";
 
 import AddHostModal from "../Modal/AddHostModal";
@@ -12,7 +18,6 @@ const Search = () => {
   const [isGroupModalOpen, setGroupModalOpen] = useState(false);
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
-
 
   const handleDropdownClick = useCallback((option) => {
     setIsDropdownOpen(false);
@@ -35,10 +40,12 @@ const Search = () => {
     }
   }, []);
 
-
-  const handleSearchChange = useCallback((e) => {
-    setSearchQuery(e.target.value);
-  }, [setSearchQuery]);
+  const handleSearchChange = useCallback(
+    (e) => {
+      setSearchQuery(e.target.value);
+    },
+    [setSearchQuery],
+  );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -53,7 +60,6 @@ const Search = () => {
     };
   }, []);
 
- 
   useEffect(() => {
     if (!isHostModalOpen && !isGroupModalOpen && inputRef.current) {
       inputRef.current.blur();
@@ -98,7 +104,6 @@ const Search = () => {
         </svg>
       </div>
 
-   
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -123,7 +128,13 @@ const Search = () => {
         {isDropdownOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
             <div className="py-1">
-              {["Group", "Host", "AWS Integration", "Azure Integration", "Import Configuration"].map((option) => (
+              {[
+                "Group",
+                "Host",
+                "AWS Integration",
+                "Azure Integration",
+                "Import Configuration",
+              ].map((option) => (
                 <button
                   key={option}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

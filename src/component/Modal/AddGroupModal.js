@@ -36,7 +36,6 @@ const AddGroupModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    
     <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 transition-all duration-300">
       <div className="bg-white rounded-lg shadow-lg p-6 w-[400px] max-w-[90%]">
         <div className="flex justify-between items-center mb-4">
